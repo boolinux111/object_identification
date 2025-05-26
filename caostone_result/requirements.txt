@@ -1,5 +1,0 @@
-# requirements.txt
-face_recognition
-deep_sort_realtime
--e ./deepface
-torchreid
