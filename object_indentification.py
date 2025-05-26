@@ -10,7 +10,7 @@ from deepface import DeepFace
 from tqdm import tqdm
 from deep_sort_realtime.deepsort_tracker import DeepSort
 
-def run_pipeline(base_dir, frame_set_name, output_dir, output_face_dir):
+def run_pipeline(base_dir, frame_set_name, output_dir, output_face_dir, output_video):
     FRAMES_DIR = os.path.join(base_dir, frame_set_name, 'frames')
     DETECTIONS_JSON = os.path.join(base_dir, frame_set_name, 'content', 'detections.json')
 
@@ -176,6 +176,19 @@ def run_pipeline(base_dir, frame_set_name, output_dir, output_face_dir):
         out_path = os.path.join(output_dir, fname)
         cv2.imwrite(out_path, frame)
 
+    if output_video:
+        print(f"\n🎞️ 최종 영상 생성 중: {output_video}")
+        frame_files = sorted([f for f in os.listdir(output_dir) if f.endswith('.jpg')])
+        if frame_files:
+            sample = cv2.imread(os.path.join(output_dir, frame_files[0]))
+            height, width = sample.shape[:2]
+            writer = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*"mp4v"), 20, (width, height))
+            for f in frame_files:
+                img = cv2.imread(os.path.join(output_dir, f))
+                writer.write(img)
+            writer.release()
+            print("✅ 영상 저장 완료")
+
     print('Pipeline completed.')
 
 if __name__ == "__main__":
@@ -184,6 +197,7 @@ if __name__ == "__main__":
     parser.add_argument("--frame_set_name", type=str, required=True, help="프레임 세트 폴더명")
     parser.add_argument("--output_dir", type=str, default="/content/output_pipeline_DeepSORT")
     parser.add_argument("--output_face_dir", type=str, default="/content/output_image")
+    parser.add_argument("--output_video", type=str, default=None, help="최종 영상 저장 경로 (예: result.mp4)")
     args = parser.parse_args()
 
-    run_pipeline(args.base_dir, args.frame_set_name, args.output_dir, args.output_face_dir)
+    run_pipeline(args.base_dir, args.frame_set_name, args.output_dir, args.output_face_dir, args.output_video)
