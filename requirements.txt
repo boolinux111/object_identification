@@ -1,4 +1,4 @@
 face_recognition
 deep_sort_realtime
 torchreid
--e /content/object_identification/deepface
+git+https://github.com/serengil/deepface.git
