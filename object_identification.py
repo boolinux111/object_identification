@@ -131,12 +131,14 @@ def run_pipeline(base_dir, frame_set_name, output_dir, output_face_dir, output_v
             continue
         raw_frame = frame.copy()
 
+        print(f"\n--- Frame {idx+1}: {fname} ---")
         boxes = dets.get(fname, [])
         dets_list = [([x1,y1,x2-x1,y2-y1], conf, 'person') for x1,y1,x2,y2,conf in boxes]
 
         tracks = tracker.update_tracks(dets_list, frame=frame)
-        curr_ids = {t.track_id for t in tracks}
+        print(f"Updated tracks: {[t.track_id for t in tracks]}")
 
+        curr_ids = {t.track_id for t in tracks}
         for old in list(final_id):
             if old not in curr_ids:
                 final_id.pop(old)
@@ -148,15 +150,21 @@ def run_pipeline(base_dir, frame_set_name, output_dir, output_face_dir, output_v
             roi = raw_frame[y1:y2, x1:x2]
 
             pid = final_id.get(raw_tid, 'unknown')
+            cv2.rectangle(frame, (x1,y1), (x2,y2), (255,0,0), 2) # Blue box
+            cv2.putText(frame, f"track_{raw_tid}", (x1,y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 1)
+
             if raw_tid in final_id:
+                pid = final_id[raw_tid]
+                print(f"track_{raw_tid} already assigned -> {pid}")
+                cv2.rectangle(frame, (x1,y1), (x2,y2), (0,255,0), 2)
+                cv2.putText(frame, pid, (x1,y1-20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
                 continue
 
             faces = face_detector.detect_faces(roi)
+            print(f"  track_{raw_tid}, faces_detected={len(faces)}")
             if faces:
                 x_f,y_f,w_f,h_f = faces[0]['box']
-                kpts_roi = np.array([faces[0]['keypoints'][k] for k in
-                                     ['left_eye','right_eye','nose','mouth_left','mouth_right']],
-                                    dtype=np.float32)
+                kpts_roi = np.array([faces[0]['keypoints'][k] for k in ['left_eye','right_eye','nose','mouth_left','mouth_right']], dtype=np.float32)
                 raw_face = roi[y_f:y_f+h_f, x_f:x_f+w_f]
                 kpts_raw = kpts_roi - np.array([x_f,y_f], dtype=np.float32)
                 aligned = align_face(raw_face, kpts_raw)
@@ -166,15 +174,22 @@ def run_pipeline(base_dir, frame_set_name, output_dir, output_face_dir, output_v
                     pid, sim = match_face(emb_f)
                     final_id[raw_tid] = pid
                     pid_to_canonical_tid.setdefault(pid, raw_tid)
+                    print(f"Assigned by FACE: track_{raw_tid} -> {pid}, sim={sim:.4f}")
+                    cv2.rectangle(frame, (x1,y1), (x2,y2), (0,255,0), 2)
+                    cv2.putText(frame, f"track_{raw_tid}/{pid}", (x1,y1-20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
                     continue
 
             emb_b = extract_body_emb(roi)
             pid, sim = match_body(emb_b)
             final_id[raw_tid] = pid
             pid_to_canonical_tid.setdefault(pid, raw_tid)
+            print(f"Assigned by BODY: track_{raw_tid} -> {pid}, sim={sim:.4f}")
+            cv2.rectangle(frame, (x1,y1), (x2,y2), (0,255,255), 2)
+            cv2.putText(frame, f"track_{raw_tid}/{pid}", (x1,y1-20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,255), 1)
 
         out_path = os.path.join(output_dir, fname)
         cv2.imwrite(out_path, frame)
+        print(f"Saved {out_path}")
 
     if output_video:
         print(f"\n🎞️ 최종 영상 생성 중: {output_video}")
