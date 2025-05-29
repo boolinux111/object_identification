@@ -177,7 +177,14 @@ def run_pipeline(base_dir, frame_set_name, output_dir, output_face_dir, output_v
                     print(f"Assigned by FACE: track_{raw_tid} -> {pid}, sim={sim:.4f}")
                     cv2.rectangle(frame, (x1,y1), (x2,y2), (0,255,0), 2)
                     cv2.putText(frame, f"track_{raw_tid}/{pid}", (x1,y1-20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
+
+                    # ✅ 추가된 부분: body 임베딩도 저장
+                    emb_b = extract_body_emb(roi)
+                    if emb_b is not None:
+                        person_gallery[pid]['body'] = emb_b
+
                     continue
+
 
             emb_b = extract_body_emb(roi)
             pid, sim = match_body(emb_b)
@@ -197,7 +204,7 @@ def run_pipeline(base_dir, frame_set_name, output_dir, output_face_dir, output_v
         if frame_files:
             sample = cv2.imread(os.path.join(output_dir, frame_files[0]))
             height, width = sample.shape[:2]
-            writer = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*"mp4v"), 20, (width, height))
+            writer = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*"mp4v"), 10, (width, height))
             for f in frame_files:
                 img = cv2.imread(os.path.join(output_dir, f))
                 writer.write(img)
