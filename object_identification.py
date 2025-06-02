@@ -53,7 +53,7 @@ def run_pipeline(base_dir, frame_set_name, output_dir, output_face_dir, output_v
 
     # OSNet-AIN 사용
     body_model = torchreid.models.build_model(
-        name='osnet_ain_x1_0',
+        name='pcb_p6',
         num_classes=1000,
         loss='softmax',
         pretrained=True
@@ -62,7 +62,7 @@ def run_pipeline(base_dir, frame_set_name, output_dir, output_face_dir, output_v
     tracker = DeepSort(
         max_age=3,
         n_init=3,
-        max_iou_distance=0.2,
+        max_iou_distance=0.1,
     )
 
     # ── (6) person_gallery, ID/색상 매핑 초기화 ─────────────────────────────────
