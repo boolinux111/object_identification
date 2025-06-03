@@ -1,4 +1,28 @@
-face_recognition
-deep_sort_realtime
+# 숫치 연산 및 이미지 처리
+numpy
+opencv-python
+
+# PyTorch 및 ReID 관련
+torch
 torchreid
+
+# MTCNN 얼굴 검출
+mtcnn
+
+# DeepFace (GitHub 버전)
 git+https://github.com/serengil/deepface.git
+
+# 진행 상태 표시
+tqdm
+
+# DeepSort 트래커
+deep-sort-realtime
+
+# Ultralytics YOLO
+ultralytics
+
+# SceneDetect (OpenCV 백엔드 포함)
+scenedetect[opencv]
+
+# 얼굴 인식 라이브러리
+face_recognition
